@@ -13,6 +13,6 @@ if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
 # Importer le module PSWindowsUpdate
 Import-Module PSWindowsUpdate
 
-# Lancer la commande pour rechercher, télécharger, installer les mises à jour et redémarrer automatiquement si nécessaire
+# Lancer la commande pour rechercher, télécharger depuis les serveurs de Windows Update, installer les mises à jour et redémarrer automatiquement si nécessaire
 Write-Host "Lancement de la mise à jour de Windows..."
-Get-WindowsUpdate -AcceptAll -Install -AutoReboot
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot | Out-File "C:\Automatisations\WindowsUpdate.log" -force
