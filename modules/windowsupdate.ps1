@@ -6,7 +6,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Vérifier si le Package Provider NuGet est installé, sinon l'installer
 if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
-    Write-Host "Installation du Package Provider NuGet..."
+    Write-Host "Installation du Package Provider NuGet pour installer par la suite PSWindowsUpdate..."
     Install-PackageProvider -Name NuGet -Force
 } else {
     Write-Host "Le Package Provider NuGet est déjà installé."
