@@ -1,6 +1,13 @@
-# Vérifier si le script est exécuté avec des privilèges d'administrateur.
-if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Error "Ce script doit être exécuté en tant qu'administrateur. Arrêt du script."
+# Fonction pour vérifier si le script est exécuté en tant qu'administrateur
+function Test-Admin {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Si le script n'est pas exécuté en tant qu'administrateur, le relancer avec des privilèges élevés
+if (-not (Test-Admin)) {
+    Write-Host "Relancement du script avec des privilèges administratifs..."
+    Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
 
@@ -15,7 +22,7 @@ if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
 # Installer le module PSWindowsUpdate s'il n'est pas déjà présent.
 if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
     Write-Host "Installation du module PSWindowsUpdate..."
-    Install-Module -Name PSWindowsUpdate -Force -Scope AllUsers
+    Install-Module -Name PSWindowsUpdate -Force
 }
 
 # Importer le module PSWindowsUpdate.
