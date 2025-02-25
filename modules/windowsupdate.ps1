@@ -63,3 +63,4 @@ Import-Module PSWindowsUpdate
 # Lancer la commande pour rechercher, télécharger depuis les serveurs de Windows Update, installer les mises à jour et redémarrer automatiquement si nécessaire.
 Write-Host "Recherche et installation des mises à jour Windows ainsi que des pilotes de l'ordinateur via les serveurs de Windows Update..."
 Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
+Read-Host "Installation des mises à jour terminée."
