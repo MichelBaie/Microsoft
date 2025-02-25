@@ -31,7 +31,6 @@
     Le script est succeptible de demander à l'utilisateur des autorisations lors de l'installation des modules.
 #>
 
-
 # Fonction pour vérifier si le script est exécuté en tant qu'administrateur
 function Test-Admin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())

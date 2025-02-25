@@ -31,7 +31,6 @@
     Aucune entrée utilisateur n'est requise pour l'exécution du script.
 #>
 
-
 # Vérifier si le nom d'utilisateur correspond à "ITLocal"
 if ($env:USERNAME -eq "ITLocal") {
     Write-Output "Compte ITLocal détecté. Modification des paramètres d'alimentation..."
@@ -43,5 +42,5 @@ if ($env:USERNAME -eq "ITLocal") {
     Read-Host "Les paramètres ont été modifiés : l'écran reste allumé et le PC ne passe pas en veille."
 }
 else {
-    Write-Output "Ce script s'exécute uniquement pour les comptes ITLocal. Aucun changement appliqué."
+    Read-Host "Ce script s'exécute uniquement pour les comptes ITLocal. Aucun changement appliqué."
 }
