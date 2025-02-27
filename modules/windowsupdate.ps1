@@ -4,7 +4,6 @@
 
 .DESCRIPTION
     Ce script automatise le processus de mise à jour de Windows et des pilotes.
-    S'il rencontre une erreur critique, il redémarrera l'ordinateur.
 
 .AUTHOR
     Tristan BRINGUIER
@@ -26,21 +25,11 @@
     Ce script ne prend pas de paramètres en entrée.
 
 .OUTPUTS
-    Le script affiche les résultats des mises à jour dans la console ou redémarre l'ordinateur en cas d'erreur.
+    Le script affiche les résultats des mises à jour dans la console.
 
 .INPUTS
-    Le script est susceptible de demander à l'utilisateur des autorisations lors de l'installation des modules.
+    Le script est succeptible de demander à l'utilisateur des autorisations lors de l'installation des modules.
 #>
-
-# Forcer l'arrêt en cas d'erreur
-$ErrorActionPreference = "Stop"
-
-# Gestionnaire d'erreurs global
-trap {
-    Write-Host "Une erreur est survenue : $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Redémarrage de l'ordinateur..."
-    Restart-Computer -Force
-}
 
 # Fonction pour vérifier si le script est exécuté en tant qu'administrateur
 function Test-Admin {
@@ -70,9 +59,7 @@ if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
 # Importer le module PSWindowsUpdate.
 Import-Module PSWindowsUpdate
 
-# Lancer la commande pour rechercher, télécharger depuis les serveurs de Windows Update,
-# installer les mises à jour et redémarrer automatiquement si nécessaire.
+# Lancer la commande pour rechercher, télécharger depuis les serveurs de Windows Update, installer les mises à jour et redémarrer automatiquement si nécessaire.
 Write-Host "Recherche et installation des mises à jour Windows ainsi que des pilotes de l'ordinateur via les serveurs de Windows Update..."
 Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
-
 Read-Host "Installation des mises à jour terminée."
