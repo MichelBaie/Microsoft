@@ -1,2 +1,2 @@
-# MasterOS
-Un script powershell et un autounattend.xml pour déployer un Windows automatiquement !
+# Windows
+Du powershell et plein d'autres choses pour automatiser un environnement Windows !
