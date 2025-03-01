@@ -1,114 +1,84 @@
-<#
-.SYNOPSIS
-    Script permettant d'installer Chocolatey et une liste de packages.
-
-.DESCRIPTION
-    Ce script supprime l'installation existante de Chocolatey (si présente),
-    installe Chocolatey via la commande spécifiée,
-    puis procède à l'installation des packages définis.
-    
-.AUTHOR
-    Tristan BRINGUIER
-
-.DATE
-    Février 2025
-
-.VERSION
-    1.0
-
-.NOTES
-    Ce script doit être exécuté avec des privilèges administratifs.
-    Si ce n'est pas le cas, il se relancera automatiquement en tant qu'administrateur.
-
-.EXAMPLE
-    .\chocolateysofts.ps1
-
-.PARAMETER None
-    Ce script ne prend pas de paramètres en entrée.
-
-.OUTPUTS
-    Le script affiche l'état des installations et les résultats des commandes dans la console.
-
-.INPUTS
-    Le script est succeptible de demander à l'utilisateur des autorisations lors de l'installation des modules.
-#>
-
-# Définition de la liste des packages à installer via Chocolatey
+# Liste des packages à installer via Chocolatey
 $packages = @(
-    "firefoxesr", # Firefox Extended Support Release
-    "vlc",
+    "googlechrome",
+    "sumatrapdf.install",
+    "firefoxesr",
     "7zip",
     "notepadplusplus",
-    "googlechrome",
-    "adobereader"
+    "vlc",
+    "dellcommandupdate",
+    "hpsupportassistant",
+    "everything",
+    "libreoffice-fresh"
 )
 
-# Fonction pour vérifier si le script est exécuté avec des privilèges administratifs
-function Test-Admin {
-    # Récupère l'identité de l'utilisateur courant et vérifie son appartenance au groupe Administrateurs
-    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-    return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-# Vérification des privilèges administratifs
-if (-not (Test-Admin)) {
-    Write-Host "Relancement du script avec des privilèges administratifs... (Veuillez accepter l'UAC)"
-    # Relance le script en mode administrateur et quitte le processus actuel
-    Start-Process powershell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
-    exit
-}
-
-# Fonction pour installer Chocolatey
+<#
+.SYNOPSIS
+Installe Chocolatey et suppression des installations existantes
+#>
 function Install-Chocolatey {
-    Write-Output "Installation de Chocolatey..."
-    try {
-        # Modifie la politique d'exécution pour permettre l'exécution du script d'installation
+    Write-Host "Début de l'installation de Chocolatey."
+    
+    # Bloc d'installation avec réessai automatique
+    Invoke-WithRetry -ScriptBlock {
+        # Nettoyage des installations précédentes
+        if (Test-Path "$env:ProgramData\chocolatey") {
+            Remove-Item "$env:ProgramData\chocolatey" -Recurse -Force
+            Write-Host "Ancienne installation de Chocolatey supprimée."
+        }
+
+        # Configuration de l'environnement pour l'installation
         Set-ExecutionPolicy Bypass -Scope Process -Force
-        # Active les protocoles TLS nécessaires pour la connexion sécurisée
         [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        # Télécharge et exécute le script d'installation de Chocolatey
+        
+        # Téléchargement et exécution du script d'installation
         iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-        Write-Output "Chocolatey a été installé avec succès."
-    } catch {
-        Write-Error "Erreur lors de l'installation de Chocolatey : $_"
-        exit 1
     }
+    
+    Write-Host "Installation de Chocolatey terminée."
 }
 
-# Fonction pour installer une liste de packages via Chocolatey
+<#
+.SYNOPSIS
+Installe la liste des packages définie dans $packages
+#>
 function Install-Packages {
-    [CmdletBinding()]
-    param(
-        # Paramètre obligatoire qui contient la liste des packages à installer
-        [Parameter(Mandatory = $true)]
-        [string[]]$Packages
-    )
-    foreach ($package in $Packages) {
-        Write-Output "Installation de $package..."
-        try {
-            # Installe le package avec Chocolatey en mode silencieux (-y pour approuver automatiquement)
-            choco install $package -y
-        } catch {
-            Write-Error "Erreur lors de l'installation du package '$package' : $_"
+    Write-Host "Début de l'installation des packages."
+    
+    # Installation de chaque package avec 3 tentatives
+    foreach ($pkg in $packages) {
+        $maxRetries = 3    # Nombre maximum de tentatives
+        $attempt = 0       # Compteur de tentatives
+        $success = $false  # État de réussite
+
+        # Boucle de réessai
+        while ($attempt -lt $maxRetries -and -not $success) {
+            Write-Host "Tentative d'installation de $pkg (essai $($attempt + 1) sur $maxRetries)..."
+            
+            # Commande d'installation Chocolatey
+            choco install $pkg -y --ignore-checksums
+            
+            # Vérification du résultat
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host "$pkg installé avec succès."
+                $success = $true
+            } else {
+                Write-Host "L'installation de $pkg a échoué (code $LASTEXITCODE)." "ERROR"
+                $attempt++
+                
+                # Pause avant réessai si ce n'était pas la dernière tentative
+                if ($attempt -lt $maxRetries) {
+                    Write-Host "Nouvelle tentative dans 5 secondes..."
+                    Start-Sleep -Seconds 5
+                }
+            }
+        }
+
+        # Gestion des échecs définitifs
+        if (-not $success) {
+            Write-Host "L'installation de $pkg a échoué après $maxRetries tentatives. Passage au package suivant." "ERROR"
         }
     }
+    
+    Write-Host "Installation des packages terminée."
 }
-
-# Suppression de l'installation existante de Chocolatey si le dossier existe
-if (Test-Path "$env:ProgramData\chocolatey") {
-    Write-Output "Ancienne installation de Chocolatey détectée. Suppression en cours..."
-    # Supprime le dossier Chocolatey et tout son contenu de manière récursive et forcée
-    Remove-Item "$env:ProgramData\chocolatey" -Recurse -Force
-} else {
-    Write-Output "Aucune installation existante de Chocolatey trouvée."
-}
-
-
-# Installation de Chocolatey
-Install-Chocolatey
-
-# Installation des packages via Chocolatey
-Install-Packages -Packages $packages
-
-# Message final indiquant la fin du processus d'installation
-Read-Host "Installation de Chocolatey et des packages terminée."
