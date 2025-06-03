@@ -1,2 +1,2 @@
-# Windows
-Du powershell et plein d'autres choses pour automatiser un environnement Windows !
+# Microsoft
+Du powershell et plein d'autres choses pour automatiser un environnement Microsoft !
